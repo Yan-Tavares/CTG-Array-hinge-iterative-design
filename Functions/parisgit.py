@@ -7,8 +7,8 @@ D2 = 24 #needs to be calculated (for now random value)
 h = 7 #needs to be calculated (for now random value)
 t1 = 10 #needs to be calculated (for now random value)
 #Geometry
-A = math.pi*(D2/2)**2
-r = math.sqrt((1.5*D2)**2+(h/2+t1+1.5*D2)**2)
+A = math.pi*(D2 / 2) ** 2
+r = math.sqrt((1.5 * D2) ** 2 + (h / 2 + t1 + 1.5 * D2) ** 2)
 rz = 1.5*D2
 rx = h/2 + t1 + 1.5 * D2
 
@@ -18,7 +18,7 @@ def calculate_Fpi( Fy, n_f ):#nf is number of fasteners
     return Fpi
 
 def calculate_Fp_Mz( Mz, A , r):  #this needs fixing for the Ai and ri 
-   Fp_Mz = (Mz * A * r)/( A*r)
+   Fp_Mz = (Mz * A * r)/( A * (r ** 2))
    return Fp_Mz
 
 def calculate_out_of_plane_load (Fp_Mz, Fpi):
@@ -48,3 +48,4 @@ sorted_calculate_out_of_plane_load = sorted(enumerate(calculate_out_of_plane_loa
 print("Ranking by out of plane load in descending order:")
 for idx, (item, strength) in enumerate(sorted_calculate_out_of_plane_load, start=1):
     print(f"{idx}. Fastener {item}: {strength}")
+
