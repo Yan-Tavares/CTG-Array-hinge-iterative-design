@@ -1,3 +1,4 @@
+from calendar import c
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -31,10 +32,10 @@ Aluminium_7075 = ["metal",76*10**9, 225*10**6 , 2.8*10**3]
 
 
 #-------- Step size configuration
-min_thickness_1 = 3*10**(-3)
-max_thickness_1 = 30*10**(-3)
-thickness_1_steps = 100
-thickness_1_stepsize = (max_thickness_1-min_thickness_1)/thickness_1_steps
+min_t_1 = 3*10**(-3)
+max_t_1 = 30*10**(-3)
+t_1_steps = 100
+t_1_stepsize = (max_t_1-min_t_1)/t_1_steps
 
 min_D_1 = 
 max_D_1 =
@@ -48,12 +49,11 @@ w_1_stepsize =
 
 chosen_h_1 = 0.05
 
+min_t_2 = 3*10**(-3)
+max_t_2 = 30*10**(-3)
+t_2_steps = 100
+t_2_stepsize = (max_t_1-min_t_1)/t_1_steps
 
-
-min_thickness_2 = 3*10**(-3)
-max_thickness_2 = 30*10**(-3)
-thickness_2_steps = 100
-thickness_2_stepsize = (max_thickness_2-min_thickness_2)/thickness_2_steps
 
 min_D_2 =
 max_D_2 =
@@ -103,16 +103,17 @@ def Succes_detector(iterate_variables):
 #iterate_variables = [Aluminium_7075, max_thickness_1,  max_w_1, max_D_1 , max_thickness_2 , max_D_2 , max_w_plate , max_h_plate ]
 
 #---------------- FLANGE DESIGN ----------------------------
-flange_variables = [Aluminium_7075, max_thickness_1,  max_w_1, chosen_h_1, max_D_1]
+flange_variables = [Aluminium_7075, max_t_1,  max_w_1, chosen_h_1, max_D_1]
 
 # Minimal thickness
 
 while flange_variables[2] <= min_w_1:
-    flange_variables[3] = max_D_1
-
-    while flange_variables[3] <= min_D_1:
-        flange_variables[2] = max_w_1
-
+    flange_variables[4] = max_D_1
+    while flange_variables[4] <= min_D_1:
+        #FUNCTION TO CALCULATE THICKNESS FOR AXIAL
+        #FUNCTION TO CALCULATE THICKNESS FOR TRANSVERSAL
+        flange_variables[1] = max_t_1
+        
         while abs((Lug_check(...,...,...)[1])/(flange_variables[0][2]) - 1) <= 0.01 and (Lug_check(...,...,...)[1])/(flange_variables[0][2]) <= 1:
             flange_variables[1]*(Lug_check(...,...,...)[1])/(flange_variables[0][2])
         
