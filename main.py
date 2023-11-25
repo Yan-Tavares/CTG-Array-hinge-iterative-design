@@ -119,9 +119,9 @@ Mat_list = [Aluminium_6061_T6, Steel_8630 ]
 #The F_r_1 used here is not the correct one, it assumes we are taking all the load on one lug 
 
 F_r_1 = Solar_array_mass * a_z
-Solar_boom_ang = math.rad(45)
+Solar_boom_ang = math.radians(45)
 P_ax = F_r_1 * np.cos(45)
-P_tras = F_r_1 * np.sin(45)
+P_trans = F_r_1 * np.sin(45)
 
 
 #set initial values for t, D, w
@@ -150,11 +150,7 @@ D_stepsize = (max_D-min_D)/D_steps
 #-----------------------ITERATIVE DESIGN CALCULATION (Jutta, Yan stuff) ----------------
 
 #----Set initial values for the iteration
-
-t = min_t
-D = min_D  #[m]
-w = min_w  #[m]
-MS = 1
+min_mass = 100
 
 #iterate over materials: 0 = Aluminium, 1 = Steel
 for Material in Mat_list:
@@ -164,54 +160,66 @@ for Material in Mat_list:
 
     D = min_D
     #iterate over D
-    while D < max_D:
+    while D <= max_D:
 
         w = min_w
         #iterate over w
-        while w < max_w:
+        while w <= max_w:
             
-            while t < max_t:
+            t = min_t
+
+            while t <= max_t:
                 #find K's stuff
                 Kt = TensionyieldFactor(w, D,Material)
                 Kbry = Shear_out_Factor(w, D, t)
                 
                 #calculate A's
                 
-                At =
-                Abr =
-                Aav = 
+                sigma_yield = 123 #add yield stress of the material
+                A1 = ((D/2-np.cos(np.pi / 4) * D / 2) + (w - D) / 2) * t
+                A2 = (w - D) * t / 2
+                A3 = (w - D) * t / 2
+                A4 = ((D/2-np.cos(np.pi / 4) * D / 2) + (w - D) / 2) * t
+                Aav =  6 / (3 / A1 + 1 / A2 + 1 / A3 + 1 / A4)
+                Abr = D*t
+                At = w * t
+
                 Kty = Trans_Factor (Aav, Abr)
+
                 #calculate axial & transverse loads (incl. safety margin)
-                Pu = Kt * MS * Sigma_y * At
-                Pbry = Kbry * MS * Sigma_y * Abr
-                Pty = Kty * Abr * MS * Sigma_y
+                Pu = Kt * Sigma_y * At
+                Pbry = Kbry * Sigma_y * Abr
+                Pty = Kty * Abr * Sigma_y
                 Pmin = min(Pu, Pbry)
+
                 #calculate Ra and Rtr
-                Ra = Pax / Pmin
-                Rtr = Ptransv / Pty
+                Ra = P_ax / Pmin
+                Rtr = P_trans / Pty
+
                 #calculate safety margin
                 MS = 1 / ((Ra**1.6 + Rtr**1.6)**0.625) -1
-                #calculate meaningfull mass (i.e. only considering the circular part
-                #of the lug, since the rectangular part is not being sized
-                mass = rho * 0.5 * math.pi * ((0.5*w)**2 - (0.5*d)**2) * t
-                #if new mass smaller than previous mass: store
-                if mass < minmass:
-                    minmass = mass
-                    topt = t
-                    Dopt = D
-                    wopt = w
-                    materialopt = material
-                    MSopt = MS
+
+                # Check if the maximum loads are smaller than the ones we are facing
+                if P_ax <= Pu * MS and P_trans <= Pty*MS:
+                    
+                    #calculate meaningfull mass (i.e. only considering the circular part)
+                    mass = rho * 0.5 * math.pi * ((0.5*w)**2 - (0.5*D)**2) * t 
+
+                    #if new mass smaller than previous mass: store
+                    if mass < min_mass:
+                        Best_config = [Material[0],mass,t,D,w,MS]
                 
                 t += t_stepsize
             w += w_stepsize
         D += D_stepsize
 
 #give final choice for material, D, w, t and resulting mass
-print("material: ",materialopt)
-print("diameter: D = ",Dopt*0.001,"mm; thickness: t = ",topt*0.001, "mm; width: w = ",wopt*0.001,"mm")
-print("used safety factor: MS = ",MSopt)
-print("resulting in a mass of: m = ",minmass,"kg")
+print(Best_config)
+
+# print("material: ",materialopt)
+# print("diameter: D = ",Dopt*0.001,"mm; thickness: t = ",topt*0.001, "mm; width: w = ",wopt*0.001,"mm")
+# print("used safety factor: MS = ",MSopt)
+# print("resulting in a mass of: m = ",minmass,"kg")
 
 
 # --------- Lug stresses
@@ -240,119 +248,119 @@ Aluminium_7075 = ["metal",76*10**9, 225*10**6 , 2.8*10**3]
 
 
 #-------- Step size configuration
-min_t_1 = 3*10**(-3)
-max_t_1 = 30*10**(-3)
-t_1_steps = 100
-t_1_stepsize = (max_t_1-min_t_1)/t_1_steps
+# min_t_1 = 3*10**(-3)
+# max_t_1 = 30*10**(-3)
+# t_1_steps = 100
+# t_1_stepsize = (max_t_1-min_t_1)/t_1_steps
 
-min_D_1 = 
-max_D_1 =
-D_1_steps =
-D_1_step_size =
+# min_D_1 = 
+# max_D_1 =
+# D_1_steps =
+# D_1_step_size =
 
-min_w_1 =
-max_w_1 =
-w_1_steps = 
-w_1_stepsize = 
+# min_w_1 =
+# max_w_1 =
+# w_1_steps = 
+# w_1_stepsize = 
 
-chosen_h_1 = 0.05
+# chosen_h_1 = 0.05
 
-min_t_2 = 3*10**(-3)
-max_t_2 = 30*10**(-3)
-t_2_steps = 100
-t_2_stepsize = (max_t_1-min_t_1)/t_1_steps
-
-
-min_D_2 =
-max_D_2 =
-D_2_steps =
-D_2_step_size =
-
-min_w_2 =
-max_w_2 =
-w_2_steps = 
-w_2_step_size = 
-
-min_h_2 =
-max_h_2 =
-h_steps = 
-h_step_size = 
-
-chosen_n_r = 
-chosen_n_c = 
+# min_t_2 = 3*10**(-3)
+# max_t_2 = 30*10**(-3)
+# t_2_steps = 100
+# t_2_stepsize = (max_t_1-min_t_1)/t_1_steps
 
 
+# min_D_2 =
+# max_D_2 =
+# D_2_steps =
+# D_2_step_size =
+
+# min_w_2 =
+# max_w_2 =
+# w_2_steps = 
+# w_2_step_size = 
+
+# min_h_2 =
+# max_h_2 =
+# h_steps = 
+# h_step_size = 
+
+# chosen_n_r = 
+# chosen_n_c = 
 
 
 
-def Succes_detector(iterate_variables):
 
-    Succes_list = [True]*4
 
-    if Lug_check(...,...,...)[0] == False:
-        Succes_list[0] = False
-        print("Fails by bearing check")
+# def Succes_detector(iterate_variables):
+
+#     Succes_list = [True]*4
+
+#     if Lug_check(...,...,...)[0] == False:
+#         Succes_list[0] = False
+#         print("Fails by bearing check")
     
-    if Bearing_check_fastener(...,...,...)[1] == False:
-        Succes_list[1] = False
-        print("Fails by bearing check")
+#     if Bearing_check_fastener(...,...,...)[1] == False:
+#         Succes_list[1] = False
+#         print("Fails by bearing check")
 
-    if Pull_through_check(...,...,...)[2] == False:
-        Succes_list[2] = False
-        print("Fails by pull through check")
+#     if Pull_through_check(...,...,...)[2] == False:
+#         Succes_list[2] = False
+#         print("Fails by pull through check")
 
-    if Thermal_check(...,...,...)[3] == False:
-        Succes_list[3] = False
-        print("Fails by thermal stress check")
-    return Succes_list
+#     if Thermal_check(...,...,...)[3] == False:
+#         Succes_list[3] = False
+#         print("Fails by thermal stress check")
+#     return Succes_list
 
 
 
-#iterate_variables = [Aluminium_7075, max_thickness_1,  max_w_1, max_D_1 , max_thickness_2 , max_D_2 , max_w_plate , max_h_plate ]
+# #iterate_variables = [Aluminium_7075, max_thickness_1,  max_w_1, max_D_1 , max_thickness_2 , max_D_2 , max_w_plate , max_h_plate ]
 
-#---------------- FLANGE DESIGN ----------------------------
-flange_variables = [Aluminium_7075, max_t_1,  max_w_1, chosen_h_1, max_D_1]
+# #---------------- FLANGE DESIGN ----------------------------
+# flange_variables = [Aluminium_7075, max_t_1,  max_w_1, chosen_h_1, max_D_1]
 
-# Minimal thickness
+# # Minimal thickness
 
-while flange_variables[2] <= min_w_1:
-    flange_variables[4] = max_D_1
-    while flange_variables[4] <= min_D_1:
-        #FUNCTION TO CALCULATE THICKNESS FOR AXIAL
-        #FUNCTION TO CALCULATE THICKNESS FOR TRANSVERSAL
-        flange_variables[1] = max_t_1
+# while flange_variables[2] <= min_w_1:
+#     flange_variables[4] = max_D_1
+#     while flange_variables[4] <= min_D_1:
+#         #FUNCTION TO CALCULATE THICKNESS FOR AXIAL
+#         #FUNCTION TO CALCULATE THICKNESS FOR TRANSVERSAL
+#         flange_variables[1] = max_t_1
         
-        while abs((Lug_check(...,...,...)[1])/(flange_variables[0][2]) - 1) <= 0.01 and (Lug_check(...,...,...)[1])/(flange_variables[0][2]) <= 1:
-            flange_variables[1]*(Lug_check(...,...,...)[1])/(flange_variables[0][2])
+#         while abs((Lug_check(...,...,...)[1])/(flange_variables[0][2]) - 1) <= 0.01 and (Lug_check(...,...,...)[1])/(flange_variables[0][2]) <= 1:
+#             flange_variables[1]*(Lug_check(...,...,...)[1])/(flange_variables[0][2])
         
-        flange_variables[3] -= D_1_step_size
+#         flange_variables[3] -= D_1_step_size
 
-        if Lug_check(...,...,...)[0] == True:
-            Valid_flange.append(flange_variables)
+#         if Lug_check(...,...,...)[0] == True:
+#             Valid_flange.append(flange_variables)
 
-    flange_variables[2] -= w_1_stepsize
+#     flange_variables[2] -= w_1_stepsize
 
-#---------------- PLATE DESIGN -------------------------
+# #---------------- PLATE DESIGN -------------------------
 
-plate_variables = [Aluminium_7075, max_thickness_2,  max_w_2, max_h_2, max_D_2, chosen_n_r, chosen_n_c]
+# plate_variables = [Aluminium_7075, max_thickness_2,  max_w_2, max_h_2, max_D_2, chosen_n_r, chosen_n_c]
 
-if Success_dector(iteration_variables).count(True) == 3:
-    Valid_configurations.append(iteration_variables)
-else:
-    if Succes_detector(iterate_variables)[1] == False:
-        
-
-        iterate_variables[3] = 
+# if Success_dector(iteration_variables).count(True) == 3:
+#     Valid_configurations.append(iteration_variables)
+# else:
+#     if Succes_detector(iterate_variables)[1] == False:
         
 
+#         iterate_variables[3] = 
+        
 
 
 
-t_1 = min_thickness_1
 
-while t_1 < max_thickness_1:
+# t_1 = min_thickness_1
 
-    t_1 += (max_thickness_1-min_thickness_1)/100
+# while t_1 < max_thickness_1:
+
+#     t_1 += (max_thickness_1-min_thickness_1)/100
 
 
 #input: (w_plate,h_plate,x_off,z_off,D_2,Mat_type)
