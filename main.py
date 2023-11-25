@@ -28,8 +28,7 @@ alpha_z = 0
 
 def Trans_Factor (Aav, Abr):
     x = Aav/Abr
-    K_ty_curve = Cgen.Polynomial_fit("Reader Graphs\D-15","3")
-    K_ty = Cgen.Value_from_poly_fit(K_ty_curve,x)
+    K_ty = Cgen.Closest_data_point("Functions\Reader Graphs\D-15","3",x)
 
     return K_ty
 
@@ -37,23 +36,33 @@ def Shear_out_Factor(w, D, t):
     e = (w/2)
     x = e/(D)
 
-    Curve_choice = round(t/D,0)
+    if x >= 4:
+        x = 4
 
-    if Curve_choice > 0.6:
-        Curve_choice = 0.6
+    if t/D >= 0.6:
+        Curve_choice = "0.60"
+
+    if t/D >= 0.195 and t/D  <0.6:
+        Curve_choice = '{:.2f}'.format(round(t/D,1))
     
-    if Curve_choice < 0.06:
-        Curve_choice = 0.06
+    if t/D > 0.06 and t/D  < 0.195:
+        Curve_choice = '{:.2f}'.format(round(t/D,2))
+    
+    if t/D <= 0.06:
+        Curve_choice = "0.06"
 
-    K_bry_curve = Cgen.Polynomial_fit("Reader Graphs\D-14", str(Curve_choice))
-    K_bry= Cgen.Value_from_poly_fit(K_bry_curve,x)
+
+    K_bry = Cgen.Closest_data_point("Functions\Reader Graphs\D-14", str(Curve_choice),x)
+
+    #print("e/(D): ", x,"Curve_choice: ",Curve_choice,"Kbry: ",K_bry)
+    if K_bry <= 0:
+        K_bry = 0
 
     return K_bry
 
 def TensionyieldFactor(w, D,Material):
     x = w/D
-    K_t_curve = Cgen.Polynomial_fit("Reader Graphs\D-12", Material)
-    K_t= Cgen.Value_from_poly_fit(K_t_curve,x)
+    K_t = Cgen.Closest_data_point("Functions\Reader Graphs\D-12", Material,x)
 
     return K_t
 
@@ -123,6 +132,8 @@ Solar_boom_ang = math.radians(45)
 P_ax = F_r_1 * np.cos(45)
 P_trans = F_r_1 * np.sin(45)
 
+print("Axial force: ", P_ax)
+print("Tranversal force", P_trans)
 
 #set initial values for t, D, w
 
@@ -132,19 +143,19 @@ P_trans = F_r_1 * np.sin(45)
 #Ptransv = / 2 #[N], load P/2 taken by each of the two lugs
 
 #-----------------------SET STEPSIZE (Yan stuff) -------------------
-min_t = 3*10**(-3) #[m]
-max_t = 30*10**(-3) #[m]
-t_steps = 100
+min_t = 1*10**(-3) #[m]
+max_t = 20*10**(-3) #[m]
+t_steps = 5
 t_stepsize = (max_t-min_t)/t_steps
 
-min_w = 30 *10**(-3) #[m]
+min_w = 10 *10**(-3) #[m]
 max_w = 150 *10**(-3) #[m]
-w_steps = 100
+w_steps = 5
 w_stepsize = (max_w-min_w)/w_steps
 
-min_D = 10 *10**(-3)
-max_D = max_w * 0.8
-D_steps = 100
+min_D = 5 *10**(-3)
+max_D = max_w * 0.96
+D_steps = 5
 D_stepsize = (max_D-min_D)/D_steps
 
 #-----------------------ITERATIVE DESIGN CALCULATION (Jutta, Yan stuff) ----------------
@@ -154,9 +165,9 @@ min_mass = 100
 
 #iterate over materials: 0 = Aluminium, 1 = Steel
 for Material in Mat_list:
-    Sigma_y = Mat_list[Material][2]
-    rho = Mat_list[Material][3]
-    curve_identifier = Mat_list[Material]
+    Sigma_y = Material[2]
+    rho = Material[3]
+    type_identifier = Material[1]
 
     D = min_D
     #iterate over D
@@ -165,12 +176,17 @@ for Material in Mat_list:
         w = min_w
         #iterate over w
         while w <= max_w:
+
+            if D > w * 0.95:
+                w += w_stepsize
+                continue
             
             t = min_t
-
+            
+            #iterate over t
             while t <= max_t:
                 #find K's stuff
-                Kt = TensionyieldFactor(w, D,Material)
+                Kt = TensionyieldFactor(w, D,Material[1])
                 Kbry = Shear_out_Factor(w, D, t)
                 
                 #calculate A's
@@ -191,8 +207,16 @@ for Material in Mat_list:
                 Pbry = Kbry * Sigma_y * Abr
                 Pty = Kty * Abr * Sigma_y
                 Pmin = min(Pu, Pbry)
+                
+                
 
                 #calculate Ra and Rtr
+
+                if Pmin <= 0:
+                    print("No axial force allowed, Pmin = ", Pmin)
+                    t += t_stepsize
+                    continue
+
                 Ra = P_ax / Pmin
                 Rtr = P_trans / Pty
 
@@ -200,14 +224,23 @@ for Material in Mat_list:
                 MS = 1 / ((Ra**1.6 + Rtr**1.6)**0.625) -1
 
                 # Check if the maximum loads are smaller than the ones we are facing
-                if P_ax <= Pu * MS and P_trans <= Pty*MS:
+                if P_ax <= Pmin/ MS and P_trans <= Pty/ MS:
                     
                     #calculate meaningfull mass (i.e. only considering the circular part)
                     mass = rho * 0.5 * math.pi * ((0.5*w)**2 - (0.5*D)**2) * t 
 
                     #if new mass smaller than previous mass: store
                     if mass < min_mass:
+                        min_mass = mass
                         Best_config = [Material[0],mass,t,D,w,MS]
+
+                        print("\nBetter configuration found")
+                        print("Kbry:", Kbry)
+                        print("Margin of safety used:", MS)
+                        print("Allowed axial force",Pmin/MS)
+                        print("Allowed transversal force",Pty/MS)
+                        print("Mass: ", mass,"\n")
+
                 
                 t += t_stepsize
             w += w_stepsize
@@ -244,7 +277,7 @@ print(Best_config)
 # iterate_variables = [ Material_prop_list , Fastener_material_prop_list ,  t_1 , t_2 ,  h , w , D_1 , D_2 , w_plate , h_plate , x_off , z_off ]
 
 #Material = [Youngus_Modulus,Yield_Strength,density, density]
-Aluminium_7075 = ["metal",76*10**9, 225*10**6 , 2.8*10**3]
+#Aluminium_7075 = ["metal",76*10**9, 225*10**6 , 2.8*10**3]
 
 
 #-------- Step size configuration
