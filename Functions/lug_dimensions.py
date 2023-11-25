@@ -3,6 +3,73 @@
 import numpy as np
 import math
 
+#SANTIAGO'S CODE
+
+#Determine t1, w, D1
+
+import scipy.io
+from ReactionForcecode import *
+#Forces
+#4.2
+
+F1 = (z*L3)/(2*h1)
+Pvec = np.array([0, y+F1, z])
+Pmag = np.linalg.norm(Pvec)
+
+#yield stress as failure condition leads to taking Curve 3 from the D1.15 graph
+def TransFactor (Aav, Abr):
+    x = Aav/Abr
+    curve = 0.0596 x**4
+    return curve
+def ShearyieldFactor(w, D):
+    x = (w)/(2*D)
+    curve = -0.0103*x**4
+    return curve
+def TensionyieldFactor(w, D):
+    x = w/D
+    curve =0
+    return curve
+def MS(t1, D, w):
+    sigma_yield = 123 #add yield stress of the material
+    A1 = ((D/2-cos(pi / 4) * D / 2) + (w - D) / 2) * t1
+    A2 = (w - D) * t1 / 2
+    A3 = (w - D) * t1 / 2
+    A4 = ((D/2-cos(pi / 4) * D / 2) + (w - D) / 2) * t1
+
+    #To avoid if denominator is 0
+    if A1 ==0 or A2==0 or A3 == 0 or A4 ==0:
+        return 0
+    Aav =  6 / (3 / A1 + 1 / A2 + 1 / A3 + 1 / A4)
+    Abr = D*t1
+
+    #Decomposing P into the transverse load and the axial load
+
+    axial = Pvec[1]
+    transverse  = Pvec[2]
+    #transverse shear factor
+    kty = TransFactor(Aav, Abr)
+    Pty = kty*Abr*sigma_yield
+    Rtr = transverse/Pty
+    #axial shearfactor
+    #will be tension and also shear
+    ksy = ShearyieldFactor(w, D)
+    Aeff =  2*((w-D)/2+D/2)*t1
+    Psy = ksy * Aeff * sigma_yield
+    kt = TensionyieldFactor(w, D)
+    Psyt = kt*Aeff*sigma_yield
+    Ra = axial/min(Psy, Psyt)
+
+    MS = (1/((Ra**1.6)+(Rtr**1.6))**0.625)-1
+    return MS
+
+for t1 in np.arange(0, 1.2, 0.2):
+    for D in np.arange(0, 1.2, 0.2):
+        for w in np.arange(0, 1.2, 0.2):
+            result = MS(t1, D, w)
+            print(result)
+
+#JUTTA'S CODE
+
 #define functions for Kt, Kty, Kbry
 
 #define functions for At, Abr, Aav
