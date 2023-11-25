@@ -2,33 +2,56 @@
 
 import numpy as np
 import math
+import Curve_generator as Cgen
+import Reaction_force_calculator as RecF
+
+Spacecraft_mass
+
+
+
+
+def Trans_Factor (Aav, Abr):
+    x = Aav/Abr
+    K_ty_curve = Cgen.Polynomial_fit("Reader Graphs\D-15","3")
+    K_ty = Cgen.Value_from_poly_fit(K_ty_curve,x)
+
+    return K_ty
+
+def Shear_out_Factor(w, D, t):
+    e = (w/2)
+    x = e/(D)
+
+    Curve_choice = round(t/D,0)
+
+    if Curve_choice > 0.6:
+        Curve_choice = 0.6
+    
+    if Curve_choice < 0.06:
+        Curve_choice = 0.06
+
+    K_bry_curve = Cgen.Polynomial_fit("Reader Graphs\D-14", str(Curve_choice))
+    K_bry= Cgen.Value_from_poly_fit(K_bry_curve,x)
+
+    return K_bry
+
+def TensionyieldFactor(w, D,Material):
+    x = w/D
+    K_t_curve = Cgen.Polynomial_fit("Reader Graphs\D-12", Material)
+    K_t= Cgen.Value_from_poly_fit(K_t_curve,x)
+
+    return K_t
 
 #SANTIAGO'S CODE
 
 #Determine t1, w, D1
 
 import scipy.io
-from ReactionForcecode import *
-#Forces
-#4.2
 
 F1 = (z*L3)/(2*h1)
 Pvec = np.array([0, y+F1, z])
 Pmag = np.linalg.norm(Pvec)
 
-#yield stress as failure condition leads to taking Curve 3 from the D1.15 graph
-def TransFactor (Aav, Abr):
-    x = Aav/Abr
-    curve = 0.0596 x**4
-    return curve
-def ShearyieldFactor(w, D):
-    x = (w)/(2*D)
-    curve = -0.0103*x**4
-    return curve
-def TensionyieldFactor(w, D):
-    x = w/D
-    curve =0
-    return curve
+
 def MS(t1, D, w):
     sigma_yield = 123 #add yield stress of the material
     A1 = ((D/2-cos(pi / 4) * D / 2) + (w - D) / 2) * t1
@@ -39,6 +62,7 @@ def MS(t1, D, w):
     #To avoid if denominator is 0
     if A1 ==0 or A2==0 or A3 == 0 or A4 ==0:
         return 0
+    
     Aav =  6 / (3 / A1 + 1 / A2 + 1 / A3 + 1 / A4)
     Abr = D*t1
 
@@ -61,12 +85,6 @@ def MS(t1, D, w):
 
     MS = (1/((Ra**1.6)+(Rtr**1.6))**0.625)-1
     return MS
-
-for t1 in np.arange(0, 1.2, 0.2):
-    for D in np.arange(0, 1.2, 0.2):
-        for w in np.arange(0, 1.2, 0.2):
-            result = MS(t1, D, w)
-            print(result)
 
 #JUTTA'S CODE
 

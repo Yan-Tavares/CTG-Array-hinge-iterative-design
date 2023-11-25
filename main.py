@@ -1,10 +1,218 @@
-from calendar import c
-import numpy as np
-import matplotlib.pyplot as plt
+#---- CALCULATE DIMENSIONS of LUG ----
 
-import 
-import 
-import 
+import numpy as np
+import math
+from Functions import Curve_generator as Cgen
+from Functions import Reaction_force_calculator as RecF
+
+Spacecraft_mass = 416
+Solar_array_mass = 10
+Thruster_Fz = 456
+a_x = 0
+a_y = 0
+a_z = Thruster_Fz/Spacecraft_mass
+alpha_x = 0
+alpha_y = 0
+alpha_z = 0
+
+#Equations for defining reaction forces
+#F_y_1 + F_y_2 = 0
+#F_z_1 + F_z_2 = a_z * Solar_array_mass
+#(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
+
+#Assuming 2 force members
+#F_r_1*cos(theta) + F_r_1*cos(theta) = 0
+#F_r_1*sin(theta) + F_r_2*sin(theta)= a_z * Solar_array_mass
+#(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
+
+
+def Trans_Factor (Aav, Abr):
+    x = Aav/Abr
+    K_ty_curve = Cgen.Polynomial_fit("Reader Graphs\D-15","3")
+    K_ty = Cgen.Value_from_poly_fit(K_ty_curve,x)
+
+    return K_ty
+
+def Shear_out_Factor(w, D, t):
+    e = (w/2)
+    x = e/(D)
+
+    Curve_choice = round(t/D,0)
+
+    if Curve_choice > 0.6:
+        Curve_choice = 0.6
+    
+    if Curve_choice < 0.06:
+        Curve_choice = 0.06
+
+    K_bry_curve = Cgen.Polynomial_fit("Reader Graphs\D-14", str(Curve_choice))
+    K_bry= Cgen.Value_from_poly_fit(K_bry_curve,x)
+
+    return K_bry
+
+def TensionyieldFactor(w, D,Material):
+    x = w/D
+    K_t_curve = Cgen.Polynomial_fit("Reader Graphs\D-12", Material)
+    K_t= Cgen.Value_from_poly_fit(K_t_curve,x)
+
+    return K_t
+
+
+
+
+##-------------------------SAFETY FACTOR STUFF (SANTIAGO'S CODE)
+# #Determine t1, w, D1
+
+# import scipy.io
+
+# F1 = (z*L3)/(2*h1)
+# Pvec = np.array([0, y+F1, z])
+# Pmag = np.linalg.norm(Pvec)
+
+
+# def MS(t1, D, w):
+#     sigma_yield = 123 #add yield stress of the material
+#     A1 = ((D/2-cos(pi / 4) * D / 2) + (w - D) / 2) * t1
+#     A2 = (w - D) * t1 / 2
+#     A3 = (w - D) * t1 / 2
+#     A4 = ((D/2-cos(pi / 4) * D / 2) + (w - D) / 2) * t1
+
+#     #To avoid if denominator is 0
+#     if A1 ==0 or A2==0 or A3 == 0 or A4 ==0:
+#         return 0
+    
+#     Aav =  6 / (3 / A1 + 1 / A2 + 1 / A3 + 1 / A4)
+#     Abr = D*t1
+
+#     #Decomposing P into the transverse load and the axial load
+
+#     axial = Pvec[1]
+#     transverse  = Pvec[2]
+#     #transverse shear factor
+#     kty = TransFactor(Aav, Abr)
+#     Pty = kty*Abr*sigma_yield
+#     Rtr = transverse/Pty
+#     #axial shearfactor
+#     #will be tension and also shear
+#     ksy = ShearyieldFactor(w, D)
+#     Aeff =  2*((w-D)/2+D/2)*t1
+#     Psy = ksy * Aeff * sigma_yield
+#     kt = TensionyieldFactor(w, D)
+#     Psyt = kt*Aeff*sigma_yield
+#     Ra = axial/min(Psy, Psyt)
+
+#     MS = (1/((Ra**1.6)+(Rtr**1.6))**0.625)-1
+#     return MS
+
+#-------------------------------------------------------------------------
+
+#JUTTA'S CODE
+
+#Material list
+Aluminium_6061_T6= ["Metal","Aluminium",270*10**6,2.7*10**3]
+Steel_8630 = ["Metal","Steel",550*10**6,7.85*10**3]
+Mat_list = [Aluminium_6061_T6, Steel_8630 ]
+
+#-----------------------LOAD CALCULATION ----------------
+
+# WE SHOULD USE THE REACTION FORCE CALCULATOR FUNCTION HERE BY THE WAY TO FIND F_R_1 USING TWO FORCE MEMBER ASSUMPTION
+#The F_r_1 used here is not the correct one, it assumes we are taking all the load on one lug 
+
+F_r_1 = Solar_array_mass * a_z
+Solar_boom_ang = math.rad(45)
+P_ax = F_r_1 * np.cos(45)
+P_tras = F_r_1 * np.sin(45)
+
+
+#set initial values for t, D, w
+
+#sigma_y = [30000000,250000000] #yield strengths of aluminium and steel, [Pa], min value found
+#rho = [2900,7900] #densities of aluminium and steel, [kg/m³], max value found
+#Pax =  / 2    #[N], load P/2 taken by each of the two lugs
+#Ptransv = / 2 #[N], load P/2 taken by each of the two lugs
+
+#-----------------------SET STEPSIZE (Yan stuff) -------------------
+min_t = 3*10**(-3) #[m]
+max_t = 30*10**(-3) #[m]
+t_steps = 100
+t_stepsize = (max_t-min_t)/t_steps
+
+min_w = 30 *10**(-3) #[m]
+max_w = 150 *10**(-3) #[m]
+w_steps = 100
+w_stepsize = (max_w-min_w)/w_steps
+
+min_D = 10 *10**(-3)
+max_D = max_w * 0.8
+D_steps = 100
+D_stepsize = (max_D-min_D)/D_steps
+
+#-----------------------ITERATIVE DESIGN CALCULATION (Jutta, Yan stuff) ----------------
+
+#----Set initial values for the iteration
+
+t = min_t
+D = min_D  #[m]
+w = min_w  #[m]
+MS = 1
+
+#iterate over materials: 0 = Aluminium, 1 = Steel
+for Material in Mat_list:
+    Sigma_y = Mat_list[Material][2]
+    rho = Mat_list[Material][3]
+    curve_identifier = Mat_list[Material]
+
+    D = min_D
+    #iterate over D
+    while D < max_D:
+
+        w = min_w
+        #iterate over w
+        while w < max_w:
+            
+            while t < max_t:
+                #find K's stuff
+                Kt = TensionyieldFactor(w, D,Material)
+                Kbry = Shear_out_Factor(w, D, t)
+                
+                #calculate A's
+                
+                At =
+                Abr =
+                Aav = 
+                Kty = Trans_Factor (Aav, Abr)
+                #calculate axial & transverse loads (incl. safety margin)
+                Pu = Kt * MS * Sigma_y * At
+                Pbry = Kbry * MS * Sigma_y * Abr
+                Pty = Kty * Abr * MS * Sigma_y
+                Pmin = min(Pu, Pbry)
+                #calculate Ra and Rtr
+                Ra = Pax / Pmin
+                Rtr = Ptransv / Pty
+                #calculate safety margin
+                MS = 1 / ((Ra**1.6 + Rtr**1.6)**0.625) -1
+                #calculate meaningfull mass (i.e. only considering the circular part
+                #of the lug, since the rectangular part is not being sized
+                mass = rho * 0.5 * math.pi * ((0.5*w)**2 - (0.5*d)**2) * t
+                #if new mass smaller than previous mass: store
+                if mass < minmass:
+                    minmass = mass
+                    topt = t
+                    Dopt = D
+                    wopt = w
+                    materialopt = material
+                    MSopt = MS
+                
+                t += t_stepsize
+            w += w_stepsize
+        D += D_stepsize
+
+#give final choice for material, D, w, t and resulting mass
+print("material: ",materialopt)
+print("diameter: D = ",Dopt*0.001,"mm; thickness: t = ",topt*0.001, "mm; width: w = ",wopt*0.001,"mm")
+print("used safety factor: MS = ",MSopt)
+print("resulting in a mass of: m = ",minmass,"kg")
+
 
 # --------- Lug stresses
 #input: (n_lugs,h,t,w,D_1,F_vec,M_vec,Delta_yeld,Tau_strength)
