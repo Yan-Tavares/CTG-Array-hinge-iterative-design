@@ -10,7 +10,7 @@ Solar_array_mass = 10
 Thruster_Fz = 456
 a_x = 0
 a_y = 0
-a_z = Thruster_Fz/Spacecraft_mass
+a_z = 11.5*9.81 #Thruster_Fz/Spacecraft_mass
 alpha_x = 0
 alpha_y = 0
 alpha_z = 0
@@ -127,28 +127,29 @@ Mat_list = [Aluminium_6061_T6, Steel_8630 ]
 #F_r_1*sin(theta) + F_r_2*sin(theta)= a_z * Solar_array_mass
 #(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
 
-F_r_1 = (Solar_array_mass * a_z)/2
+load_SF = 4
+F_r_1 = (Solar_array_mass * a_z)/2 * load_SF
 Solar_boom_ang = math.radians(45)
 P_ax = F_r_1 * np.cos(Solar_boom_ang)
 P_trans = F_r_1 * np.sin(Solar_boom_ang)
 
-print("Axial force: ", P_ax)
-print("Tranversal force", P_trans)
+print("Axial force with safety: ", P_ax)
+print("Tranversal force with safety ", P_trans)
 
 #-----------------------SET STEPSIZE (Yan stuff) -------------------
 min_t = 0.4*10**(-3) #[m]; min. size to 3D print aluminium is 0.381 mm
 max_t = 20*10**(-3) #[m]
-t_steps = 10
+t_steps = 20
 t_stepsize = (max_t-min_t)/t_steps
 
-min_w = 2.1 *10**(-3) #[m]
+min_w = 4 *10**(-3) #[m]
 max_w = 150 *10**(-3) #[m]
-w_steps = 10
+w_steps = 20
 w_stepsize = (max_w-min_w)/w_steps
 
 min_D = 2 *10**(-3) #[m]; min. hole size to 3D print metals
 max_D = max_w * 0.96
-D_steps = 10
+D_steps = 20
 D_stepsize = (max_D-min_D)/D_steps
 
 #-----------------------ITERATIVE DESIGN CALCULATION (Jutta, Yan stuff) ----------------
@@ -216,14 +217,17 @@ for Material in Mat_list:
                 Rtr = P_trans / Pty
 
                 #calculate safety margin
-                MS = 1 / ((Ra**1.6 + Rtr**1.6)**0.625) -1
+                MS = 1 / ((Ra**1.6 + Rtr**1.6)**0.625)# -1
+
+                if MS >= 1:
+                    MS = 1
 
                 #calculate shear stress on pin (pin on 1 lug carries half of the reaction force on the lug configuration)
                 tau_pin = (F_r_1 * 0.5) / A_pin
                 tau_max = 0.5*Sigma_y #Tresca failure criterion
 
                 #check if the maximum loads are smaller than the ones we are facing, and if pin doesn't yield
-                if P_ax <= Pmin/ MS and P_trans <= Pty/ MS and tau_pin < tau_max:
+                if P_ax <= Pmin * MS and P_trans <= Pty * MS and tau_pin < tau_max:
                     
                     #calculate meaningfull mass (i.e. only considering the circular part (tho this can be negative!!))
                     mass = rho * 0.5 * math.pi * ((0.5*w)**2 - (0.5*D)**2) * t 
@@ -231,19 +235,17 @@ for Material in Mat_list:
                     #if new mass smaller than previous mass: store
                     if mass < min_mass:
                         min_mass = mass
-                        Best_config = [Material[0],mass,t,D,w,MS]
+                        Best_config = [Material[1],mass,t,D,w,MS]
 
                         print("\nBetter configuration found")
-                        print("Flange allowed axial force:", Pu)
-                        print("Kbry:", Kbry)
-                        print("kt:", Kt)
-                        print("Margin of safety used:", MS)
-                        print("Allowed axial force",Pmin/MS)
-                        print("Allowed transversal force",Pty/MS)
-                        print("Mass: ", mass,"\n")
-                        print("Pin stress: ", tau_pin)
+                        print("Kbry: ", Kbry)
+                        print("kt: ", Kt)
+                        print("Margin of safety used: ", MS)
+                        print("Allowed axial force: ",Pmin * MS)
+                        print("Allowed transversal force: ",Pty * MS)
+                        print("Mass: ", mass)
+                        print("Pin stress: ", tau_pin,"\n")
 
-                
                 t += t_stepsize
             w += w_stepsize
         D += D_stepsize
