@@ -136,17 +136,17 @@ print("Axial force: ", P_ax)
 print("Tranversal force", P_trans)
 
 #-----------------------SET STEPSIZE (Yan stuff) -------------------
-min_t = 1*10**(-3) #[m]
+min_t = 0.4*10**(-3) #[m]; min. size to 3D print aluminium is 0.381 mm
 max_t = 20*10**(-3) #[m]
 t_steps = 10
 t_stepsize = (max_t-min_t)/t_steps
 
-min_w = 2 *10**(-3) #[m]
+min_w = 2.1 *10**(-3) #[m]
 max_w = 150 *10**(-3) #[m]
 w_steps = 10
 w_stepsize = (max_w-min_w)/w_steps
 
-min_D = 1 *10**(-3)
+min_D = 2 *10**(-3) #[m]; min. hole size to 3D print metals
 max_D = max_w * 0.96
 D_steps = 10
 D_stepsize = (max_D-min_D)/D_steps
@@ -184,7 +184,7 @@ for Material in Mat_list:
                 
                 #calculate A's
                 
-                sigma_yield = 123 #add yield stress of the material
+                sigma_yield = Sigma_y #add yield stress of the material
                 A1 = ((D/2-np.cos(np.pi / 4) * D / 2) + (w - D) / 2) * t
                 A2 = (w - D) * t / 2
                 A3 = (w - D) * t / 2
@@ -193,9 +193,11 @@ for Material in Mat_list:
                 Abr = D*t
                 At = w * t
 
+                A_pin = (D/2)**2 * math.pi
+
                 Kty = Trans_Factor (Aav, Abr)
 
-                #calculate axial & transverse loads (incl. safety margin)
+                #calculate axial & transverse loads (NOT incl. safety margin)
                 Pu = Kt * Sigma_y * At
                 Pbry = Kbry * Sigma_y * Abr
                 Pty = Kty * Abr * Sigma_y
@@ -216,10 +218,14 @@ for Material in Mat_list:
                 #calculate safety margin
                 MS = 1 / ((Ra**1.6 + Rtr**1.6)**0.625) -1
 
-                # Check if the maximum loads are smaller than the ones we are facing
-                if P_ax <= Pmin/ MS and P_trans <= Pty/ MS:
+                #calculate shear stress on pin (pin on 1 lug carries half of the reaction force on the lug configuration)
+                tau_pin = (F_r_1 * 0.5) / A_pin
+                tau_max = 0.5*Sigma_y #Tresca failure criterion
+
+                #check if the maximum loads are smaller than the ones we are facing, and if pin doesn't yield
+                if P_ax <= Pmin/ MS and P_trans <= Pty/ MS and tau_pin < tau_max:
                     
-                    #calculate meaningfull mass (i.e. only considering the circular part)
+                    #calculate meaningfull mass (i.e. only considering the circular part (tho this can be negative!!))
                     mass = rho * 0.5 * math.pi * ((0.5*w)**2 - (0.5*D)**2) * t 
 
                     #if new mass smaller than previous mass: store
@@ -235,6 +241,7 @@ for Material in Mat_list:
                         print("Allowed axial force",Pmin/MS)
                         print("Allowed transversal force",Pty/MS)
                         print("Mass: ", mass,"\n")
+                        print("Pin stress: ", tau_pin)
 
                 
                 t += t_stepsize
