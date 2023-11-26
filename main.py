@@ -15,16 +15,6 @@ alpha_x = 0
 alpha_y = 0
 alpha_z = 0
 
-#Equations for defining reaction forces
-#F_y_1 + F_y_2 = 0
-#F_z_1 + F_z_2 = a_z * Solar_array_mass
-#(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
-
-#Assuming 2 force members
-#F_r_1*cos(theta) + F_r_1*cos(theta) = 0
-#F_r_1*sin(theta) + F_r_2*sin(theta)= a_z * Solar_array_mass
-#(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
-
 
 def Trans_Factor (Aav, Abr):
     x = Aav/Abr
@@ -127,35 +117,38 @@ Mat_list = [Aluminium_6061_T6, Steel_8630 ]
 # WE SHOULD USE THE REACTION FORCE CALCULATOR FUNCTION HERE BY THE WAY TO FIND F_R_1 USING TWO FORCE MEMBER ASSUMPTION
 #The F_r_1 used here is not the correct one, it assumes we are taking all the load on one lug 
 
-F_r_1 = Solar_array_mass * a_z
+#Equations for defining reaction forces
+#F_y_1 + F_y_2 = 0
+#F_z_1 + F_z_2 = a_z * Solar_array_mass
+#(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
+
+#Assuming 2 force members
+#F_r_1*cos(theta) + F_r_1*cos(theta) = 0
+#F_r_1*sin(theta) + F_r_2*sin(theta)= a_z * Solar_array_mass
+#(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
+
+F_r_1 = (Solar_array_mass * a_z)/2
 Solar_boom_ang = math.radians(45)
-P_ax = F_r_1 * np.cos(45)
-P_trans = F_r_1 * np.sin(45)
+P_ax = F_r_1 * np.cos(Solar_boom_ang)
+P_trans = F_r_1 * np.sin(Solar_boom_ang)
 
 print("Axial force: ", P_ax)
 print("Tranversal force", P_trans)
 
-#set initial values for t, D, w
-
-#sigma_y = [30000000,250000000] #yield strengths of aluminium and steel, [Pa], min value found
-#rho = [2900,7900] #densities of aluminium and steel, [kg/m³], max value found
-#Pax =  / 2    #[N], load P/2 taken by each of the two lugs
-#Ptransv = / 2 #[N], load P/2 taken by each of the two lugs
-
 #-----------------------SET STEPSIZE (Yan stuff) -------------------
 min_t = 1*10**(-3) #[m]
 max_t = 20*10**(-3) #[m]
-t_steps = 5
+t_steps = 10
 t_stepsize = (max_t-min_t)/t_steps
 
-min_w = 10 *10**(-3) #[m]
+min_w = 2 *10**(-3) #[m]
 max_w = 150 *10**(-3) #[m]
-w_steps = 5
+w_steps = 10
 w_stepsize = (max_w-min_w)/w_steps
 
-min_D = 5 *10**(-3)
+min_D = 1 *10**(-3)
 max_D = max_w * 0.96
-D_steps = 5
+D_steps = 10
 D_stepsize = (max_D-min_D)/D_steps
 
 #-----------------------ITERATIVE DESIGN CALCULATION (Jutta, Yan stuff) ----------------
@@ -235,7 +228,9 @@ for Material in Mat_list:
                         Best_config = [Material[0],mass,t,D,w,MS]
 
                         print("\nBetter configuration found")
+                        print("Flange allowed axial force:", Pu)
                         print("Kbry:", Kbry)
+                        print("kt:", Kt)
                         print("Margin of safety used:", MS)
                         print("Allowed axial force",Pmin/MS)
                         print("Allowed transversal force",Pty/MS)
