@@ -149,7 +149,7 @@ w_stepsize = (max_w-min_w)/w_steps
 
 min_D = 2 *10**(-3) #[m]; min. hole size to 3D print metals
 max_D = max_w * 0.96
-D_steps = 20
+D_steps = 40
 D_stepsize = (max_D-min_D)/D_steps
 
 #-----------------------ITERATIVE DESIGN CALCULATION (Jutta, Yan stuff) ----------------
@@ -238,6 +238,8 @@ for Material in Mat_list:
                         Best_config = [Material[1],mass,t,D,w,MS]
 
                         print("\nBetter configuration found")
+                        print(f"{'e/D:':<35}{w/(2*D):<12.23f}{'[none]':<}")
+                        print(f"{':':<35}{w/(2*D):<12.23f}{'[none]':<}")
                         print("Kbry: ", Kbry)
                         print("kt: ", Kt)
                         print("Margin of safety used: ", MS)
