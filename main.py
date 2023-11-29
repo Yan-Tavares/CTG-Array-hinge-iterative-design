@@ -14,6 +14,12 @@ a_z = 11.5*9.81 #Thruster_Fz/Spacecraft_mass
 alpha_x = 0
 alpha_y = 0
 alpha_z = 0
+R_x_1 = 0.3963*10**(-3) #[N]
+R_x_2 = R_x_1
+R_y_1 = 117.89          #[N]
+R_y_2 = R_y_1
+R_z_1 = 416.9           #[N]
+R_z_2 = -196.2
 
 
 def Trans_Factor (Aav, Abr):
@@ -130,8 +136,10 @@ Mat_list = [Aluminium_6061_T6, Steel_8630 ]
 load_SF = 4
 F_r_1 = (Solar_array_mass * a_z)/2 * load_SF
 Solar_boom_ang = math.radians(45)
-P_ax = F_r_1 * np.cos(Solar_boom_ang)
-P_trans = F_r_1 * np.sin(Solar_boom_ang)
+#P_ax = F_r_1 * np.cos(Solar_boom_ang)
+#P_trans = F_r_1 * np.sin(Solar_boom_ang)
+P_ax = R_y_1 * load_SF
+P_trans = R_z_1 * load_SF
 
 print("Axial force with safety: ", P_ax)
 print("Tranversal force with safety ", P_trans)
