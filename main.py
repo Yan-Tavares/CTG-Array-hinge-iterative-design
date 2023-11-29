@@ -16,9 +16,9 @@ alpha_y = 0
 alpha_z = 0
 R_x_1 = 0.3963*10**(-3) #[N]
 R_x_2 = R_x_1
-R_y_1 = 117.89          #[N]
+R_y_1 = 941.76         #[N]
 R_y_2 = R_y_1
-R_z_1 = 416.9           #[N]
+R_z_1 = 564.1          #[N]
 R_z_2 = -196.2
 
 
@@ -133,7 +133,7 @@ Mat_list = [Aluminium_6061_T6, Steel_8630 ]
 #F_r_1*sin(theta) + F_r_2*sin(theta)= a_z * Solar_array_mass
 #(F_z_1 * d_y) + (F_y_1 * d_z) + (F_z_2 * d_y) + (F_y_2 * d_z) = 0
 
-load_SF = 4
+load_SF = 4.5
 F_r_1 = (Solar_array_mass * a_z)/2 * load_SF
 Solar_boom_ang = math.radians(45)
 #P_ax = F_r_1 * np.cos(Solar_boom_ang)
@@ -156,7 +156,7 @@ w_steps = 20
 w_stepsize = (max_w-min_w)/w_steps
 
 min_D = 2 *10**(-3) #[m]; min. hole size to 3D print metals
-max_D = max_w * 0.96
+max_D = max_w -3*10**(-3)
 D_steps = 40
 D_stepsize = (max_D-min_D)/D_steps
 
@@ -179,7 +179,7 @@ for Material in Mat_list:
         #iterate over w
         while w <= max_w:
 
-            if D > w * 0.95:
+            if D > w -3*10**(-3):
                 w += w_stepsize
                 continue
             
@@ -217,7 +217,7 @@ for Material in Mat_list:
                 #calculate Ra and Rtr
 
                 if Pmin <= 0:
-                    print("No axial force allowed, Pmin = ", Pmin)
+                    #print("No axial force allowed, Pmin = ", Pmin)
                     t += t_stepsize
                     continue
 
@@ -231,7 +231,7 @@ for Material in Mat_list:
                     MS = 1
 
                 #calculate shear stress on pin (pin on 1 lug carries half of the reaction force on the lug configuration)
-                tau_pin = (F_r_1 * 0.5) / A_pin
+                tau_pin = (P_ax * 0.5) / A_pin
                 tau_max = 0.5*Sigma_y #Tresca failure criterion
 
                 #check if the maximum loads are smaller than the ones we are facing, and if pin doesn't yield
@@ -245,16 +245,29 @@ for Material in Mat_list:
                         min_mass = mass
                         Best_config = [Material[1],mass,t,D,w,MS]
 
-                        print("\nBetter configuration found")
-                        print(f"{'e/D:':<35}{w/(2*D):<12.23f}{'[none]':<}")
-                        print(f"{':':<35}{w/(2*D):<12.23f}{'[none]':<}")
-                        print("Kbry: ", Kbry)
-                        print("kt: ", Kt)
-                        print("Margin of safety used: ", MS)
-                        print("Allowed axial force: ",Pmin * MS)
-                        print("Allowed transversal force: ",Pty * MS)
-                        print("Mass: ", mass)
-                        print("Pin stress: ", tau_pin,"\n")
+                        #print("\nBetter configuration found")
+                        #print(f"{'e/D:':<35}{w/(2*D):<12.23f}{'[none]':<}")
+                        #print(f"{':':<35}{w/(2*D):<12.23f}{'[none]':<}")
+                        #print("Kbry: ", Kbry)
+                        #print("kt: ", Kt)
+                        #print("Margin of safety used: ", MS)
+                        #print("Allowed axial force: ",Pmin * MS)
+                        #print("Allowed transversal force: ",Pty * MS)
+                        #print("Mass: ", mass)
+                        #print("Pin stress: ", tau_pin,"\n")
+                        
+                        print("-----------------------------------------")
+                        print("Better configuration found")
+                        print("-----------------------------------------\n")
+                        print(f"{'e/D:':<35}{w/(2*D):<12.3f}{'[none]':<}")
+                        print(f"{'Kbry:':<35}{Kbry:<12.3f}{'[none]':<}")
+                        print(f"{'kt: ':<35}{Kt:<12.3f}{'[none]':<}")
+                        print(f"{'Safety factor for loads: ':<35}{load_SF:<12.3f}{'[none]':<}")
+                        print(f"{'MS for oblique loading: ':<35}{MS:<12.3f}{'[none]':<}")
+                        print(f"{'Allowed axial force: ':<35}{Pmin * MS:<12.1f}{'[N]':<}")
+                        print(f"{'Allowed transversal force: ':<35}{Pty * MS:<12.1f}{'[N]':<}")
+                        print(f"{'Ring mass: ':<35}{2 * mass * 10**3:<12.2f}{'[g]':<}")
+                        print(f"{'Pin stress: ':<35}{tau_pin*10**(-6):<12.1f}{'[GPa]':<}","\n")
 
                 t += t_stepsize
             w += w_stepsize
