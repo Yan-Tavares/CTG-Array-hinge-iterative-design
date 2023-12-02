@@ -34,6 +34,7 @@ Steel_8630 = ["Metal","Steel",550*10**6,7.85*10**3]
 Mat_list = [Aluminium_6061_T6, Steel_8630 ]
 
 #-----------------------SET STEPSIZE -------------------
+
 min_t = 0.4*10**(-3) #[m]; min. size to 3D print aluminium is 0.381 mm
 max_t = 20*10**(-3) #[m]
 t_steps = 20
