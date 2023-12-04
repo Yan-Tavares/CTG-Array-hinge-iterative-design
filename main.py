@@ -4,6 +4,8 @@ import numpy as np
 import math
 from Functions import Flange_k_factors as K_factors
 from Functions import Thickness_Iterator as TI
+from Functions import FastenerCG as Fcg
+from Functions import Fastener_design as Fd
 
 #------------ Functions
 
@@ -48,8 +50,8 @@ print(f"{'R_z:':<15}{P_z:<8.0f}{'[N]':<15}{'SF:':<4}{SF_z:<}","\n")
 
 
 #-------- Material Data
-Aluminium_6061_T6= ["Metal","Aluminium",270*10**6,386*10**62.7*10**3]
-Steel_8630 = ["Metal","Steel",550*10**6,550*10**6,7.85*10**3]
+Aluminium_6061_T6= ["metal","Aluminium",270*10**6,2.7*10**3]
+Steel_8630 = ["metal","Steel",550*10**6,7.85*10**3]
 
 Mat_list_flanges = [Aluminium_6061_T6, Steel_8630]
 Mat_list_fasteners = [Aluminium_6061_T6, Steel_8630]
@@ -77,7 +79,7 @@ max_D_2 = 15 * 10**(-3)
 D_2_steps = 20
 D_2_stepsize = (max_D-min_D)/D_steps
 
-min_F_num = 2
+min_F_num = 3
 max_F_num = 15
 
 #-----------------------ITERATIVE DESIGN CALCULATION ----------------
@@ -94,8 +96,7 @@ print("--------------- Flange Iteration Process ------------------- \n")
 for Material in Mat_list_flanges:
     type_identifier = Material[1]
     Sigma_yield = Material[2]
-    Nominal_sigma_strength = Material[3]
-    rho = Material[4]
+    rho = Material[3]
 
     D = min_D
     #iterate over D
@@ -132,10 +133,10 @@ for Material in Mat_list_flanges:
                 #-----------------------------------
 
                 #---- Calculate allowed stresses on the ring region
-                Sigma_bearing
+                Sigma_bearing = ((w-D)/2)/D * Sigma_yield
 
                 Pu = Kt * Sigma_yield * At
-                Pbry = Kbry * Sigma_yield * Abr
+                Pbry = Kbry * Sigma_bearing * Abr
                 Pty = Kty * Abr * Sigma_yield
                 Pmin = min(Pu, Pbry)
                 
@@ -225,10 +226,35 @@ for Material in Mat_list_flanges:
 print("------------------------------------------------------------")
 print("----------------- Plate Iteration Process -------------------\n")
 
-
-
 w = Best_config_flange[4]
 t_1 = Best_config_flange[2]
+
+for Material in Mat_list_fasteners:
+    Sigma_y = Material[2]
+    rho = Material[3]
+
+    D_2 = min_D_2
+    while D_2 <= max_D_2:
+        F_num = min_F_num
+
+        while F_num <= max_F_num:
+            x_i, z_i, x_cg, z_cg, area, sumx= Fcg.fastener_CG(h,t_1,D_2,Material[0],F_num)
+            print(x_i)
+
+            #t_2 = TI.Min_thickness_finder(h, t_1, D_2, "metal", w, F_num, P_x, P_z, M_y)
+
+            F_num += 1
+        print("\n")
+        print("New D_2", D_2)
+        print("\n")
+        D_2 += D_2_stepsize
+
+
+
+
+
+
+
 
 #-----------------------SET STEPSIZE -------------------
 
