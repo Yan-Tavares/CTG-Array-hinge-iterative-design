@@ -2,7 +2,7 @@ from Functions import Curve_generator as Cgen
 
 def Trans_Factor (Aav, Abr):
     x = Aav/Abr
-    K_ty = Cgen.Closest_data_point("Functions\Reader Graphs\D-15","3",x)
+    K_ty = Cgen.Closest_data_point("Functions\Graphs datapoints\D-15","3",x)
 
     return K_ty
 
@@ -26,7 +26,7 @@ def Shear_out_Factor(w, D, t):
         Curve_choice = "0.06"
 
 
-    K_bry = Cgen.Closest_data_point("Functions\Reader Graphs\D-14", str(Curve_choice),x)
+    K_bry = Cgen.Closest_data_point("Functions\Graphs datapoints\D-14", str(Curve_choice),x)
 
     if K_bry <= 0:
         K_bry = 0
@@ -35,6 +35,20 @@ def Shear_out_Factor(w, D, t):
 
 def TensionyieldFactor(w, D,Material):
     x = w/D
-    K_t = Cgen.Closest_data_point("Functions\Reader Graphs\D-12", Material,x)
+    K_t = Cgen.Closest_data_point("Functions\Graphs datapoints\D-12", Material,x)
 
     return K_t
+
+def Edge_fillet_factor(Cross_secitons_ratio,r_fillet,t):
+    x = r_fillet/t
+
+    if Cross_secitons_ratio >= 3:
+        Curve_choice = "3.0"
+        
+    else:
+        Curve_choice = '{:.2f}'.format(round(Cross_secitons_ratio,1))
+    
+    K_t = Cgen.Closest_data_point("Functions\Graphs datapoints\Shoulder fillet kt", Curve_choice,x)
+    
+    return K_t
+    
