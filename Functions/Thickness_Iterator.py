@@ -14,12 +14,12 @@ from Functions import In_Plane_Force_calc as In_plane_F
 # Fcgz = 4.5* 496
 # My = 4.5* 177
 
-def Min_thickness_finder(h, t1, d2, material, w, fnum, Fcgx, Fcgz, My):
+def Min_thickness_finder(h, t1, d2, material, fnum, Fcgx, Fcgz, My,W):
     pi_list = []
     sigma_list = []
     stepsize = 0.0005
 
-    F_inxp, F_inzp, F_inMyp, fnump, d2p = In_plane_F.Fastener_loading(h, t1, d2, material, w, fnum, Fcgx, Fcgz, My) 
+    F_inxp, F_inzp, F_inMyp, fnump, d2p = In_plane_F.Fastener_loading(h, t1, d2, material, fnum, Fcgx, Fcgz, My,W) 
 
     for i in range(fnump): 
         pi_list.append(m.sqrt((F_inxp)**2+(F_inzp)**2+(F_inMyp[i])**2)) 

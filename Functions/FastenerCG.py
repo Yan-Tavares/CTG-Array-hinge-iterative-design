@@ -1,14 +1,12 @@
 import math as m
 
-
-def fastener_CG(h, t1, d2, mat, fnum): # h is the input of D4.2; t1 is the output of D4.3; d2 is the fastener diameter; mat should be either
+def fastener_CG(h, t1, d2, mat, fnum, w): # h is the input of D4.2; t1 is the output of D4.3; d2 is the fastener diameter; mat should be either
                                    # "metal" or "composite";  fnum is the number of total fasteners
 
     edge = 1.5 * d2
     mat = str(mat)
     sum_x = 0
     sum_z = 0
-
     
 
     # Calculate the number of columns:
@@ -61,8 +59,8 @@ def fastener_CG(h, t1, d2, mat, fnum): # h is the input of D4.2; t1 is the outpu
             continue
 
         if i == 1:
-                z_i[i] = sumy + edge + d2/2
-                sumy = sumy + edge + d2
+                z_i[i] = sumy  + d2/2
+                sumy = sumy  + d2
                 continue
         
         if i != 0 and i % 2 != 0:
@@ -186,26 +184,26 @@ def fastener_CG(h, t1, d2, mat, fnum): # h is the input of D4.2; t1 is the outpu
         sum_z = sum_z + z_i[i]
     z_cg = sum_z / 2
        
-    for i in range(2):
-        if i == 0 or i == 2:
-            z_i[i] = edge + d2 
-        if mat == "metal":
-            z_i[i] = z_i[i-1] + 2*d2 ### Says 2 OR 3 on BS.
-    
-        elif mat == "composite":
-            z_i[i] = z_i[i-1] + 4*d2 ### Says 4 OR 5 on BS. 
+    W = 11.3
+    width = (2*d2*1.5+d2+2*d2)
+    print(z_i) 
 
+    if W > width:
+        width = W
+        for i in range(len(z_i)):
+            z_i[i] = z_i[i] + (W-width)/2
+
+    # print("x_i locations for fasteners are", x_i)
+    # print("z_i locations for fasteners are", z_i)
+    # print("x_cg is", x_cg)
+    # print("z_cg is", z_cg) 
+    # print("Number of fasteners:", fnum)
+    # print("Number of columns:", col)
+    # print("total length:", sumx)
+    # print("Width is ", width )
+    # print("Lug width is: ")
+    return x_i, z_i, x_cg, z_cg, area, sumx, width  ### sumx is the length of the plate
     
 
-    #print("x_i locations for fasteners are", x_i)
-    #print("z_i locations for fasteners are", z_i)
-    #print("x_cg is", x_cg)
-    #print("z_cg is", z_cg) 
-    #print("Number of fasteners:", fnum)
-    #print("Number of columns:", col)
-    #print("total length:", sumx)
-    return x_i, z_i, x_cg, z_cg, area, sumx ### sumx is the length of the plate
-    
-
-#fastener_CG(6, 2, 1, "metal", 7)
-       # h, t1, d2, mat, fnum 
+#fastener_CG(6, 2, 1, "metal", 7, 11.3)
+       # h, t1, d2, mat, fnum, W
