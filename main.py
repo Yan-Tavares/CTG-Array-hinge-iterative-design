@@ -82,7 +82,7 @@ max_F_num = 15
 #-----------------------ITERATIVE DESIGN CALCULATION ----------------
 
 #---- PRE DEFINED VALUES -----
-h = 0.05
+h = 0.0125
 min_mass = 10 #[kg]
 
 
@@ -145,10 +145,8 @@ for Material in Mat_list_flanges:
                 #---- Calculate bending nominal stresses at flange/plate intersection
                 Flange_L = w + w/2 #Venant Principle to let stresses even out
                 Shoulder_fillet = t/2
-                Sigma_y_ben_flange = Single_flange_bending_stress(P_x/2,P_z/2,t,w,Flange_L,t/2,w/2)
-                #Single_flange_bending_stress(P_x,P_z,t,W,Flange_L,x,z)
-                
-                 #Dual_flange_bending_stress(P_x,P_z,h,t,w,Flange_L,(h/2 +t),(w/2))
+                Sigma_y_ben_flange = Dual_flange_bending_stress(P_x,P_z,h,t,w,Flange_L,(h/2 +t),(w/2)) #Single_flange_bending_stress(P_x/2,P_z/2,t,w,Flange_L,t/2,w/2)
+
                 Sigma_y_axial_flange = (P_y/2)/(w*t)
                 Sigma_y_total_flange = Sigma_y_ben_flange + Sigma_y_axial_flange
                 Kt_shoulder_fillet = K_factors.Edge_fillet_factor(3,Shoulder_fillet,t)
@@ -243,9 +241,6 @@ for Material in Mat_list_fasteners:
 
             F_num += 1
 
-        print("\n")
-        print("New D_2", D_2)
-        print("\n")
         D_2 += D_2_stepsize
 
 
