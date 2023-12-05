@@ -1,9 +1,10 @@
 import math as m
 
-def fastener_CG(h, t1, d2, w, mat, fnum ): # h is the input of D4.2; t1 is the output of D4.3; d2 is the fastener diameter; mat should be either
+def fastener_CG(h, t1, d2, mat, fnum, W): # h is the input of D4.2; t1 is the output of D4.3; d2 is the fastener diameter; mat should be either
                                    # "metal" or "composite";  fnum is the number of total fasteners
 
     edge = 1.5 * d2
+    mat = str(mat)
     sum_x = 0
     sum_z = 0
     
@@ -185,11 +186,12 @@ def fastener_CG(h, t1, d2, w, mat, fnum ): # h is the input of D4.2; t1 is the o
        
     W = 11.3
     width = (2*d2*1.5+d2+2*d2)
+    print(z_i) 
 
     if W > width:
         width = W
-        for i in range(len(z_i)):
-            z_i[i] = z_i[i] + (W-width)/2
+        z_i[0] = 2*d2
+        z_i[1] = W - (2*d2)
 
     # print("x_i locations for fasteners are", x_i)
     # print("z_i locations for fasteners are", z_i)
@@ -200,8 +202,8 @@ def fastener_CG(h, t1, d2, w, mat, fnum ): # h is the input of D4.2; t1 is the o
     # print("total length:", sumx)
     # print("Width is ", width )
     # print("Lug width is: ")
-    return x_i, z_i, x_cg, z_cg, area, sumx, width  ### sumx is the length of the plate
+    return x_i, z_i, x_cg, z_cg, area, sumx, width  ### sumx is the length of the plate 
     
 
-#fastener_CG(6, 2, 1, "metal", 7, 11.3)
+# fastener_CG(6, 2, 1, "metal", 7, 11.3)
        # h, t1, d2, mat, fnum, W
