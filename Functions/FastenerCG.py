@@ -1,10 +1,9 @@
 import math as m
 
-def fastener_CG(h, t1, d2, mat, fnum, w): # h is the input of D4.2; t1 is the output of D4.3; d2 is the fastener diameter; mat should be either
+def fastener_CG(h, t1, d2, w, mat, fnum ): # h is the input of D4.2; t1 is the output of D4.3; d2 is the fastener diameter; mat should be either
                                    # "metal" or "composite";  fnum is the number of total fasteners
 
     edge = 1.5 * d2
-    mat = str(mat)
     sum_x = 0
     sum_z = 0
     
@@ -186,7 +185,6 @@ def fastener_CG(h, t1, d2, mat, fnum, w): # h is the input of D4.2; t1 is the ou
        
     W = 11.3
     width = (2*d2*1.5+d2+2*d2)
-    print(z_i) 
 
     if W > width:
         width = W

@@ -10,26 +10,23 @@ from Functions import Fastener_design as Fd
 #------------ Functions
 
 def Flanges_inertia(h,t,W):
-    I_xx = ((t*w**3)/12)*2
-    I_zz = ((w*t**3)/12+t*W*(h/2+t/2)**2)*2
+    I_xx = ((t*W**3)/12)*2
+    I_zz = ((W*t**3)/12 + t*W*(h/2+t/2)**2)*2
 
     return I_xx,I_zz
 
-def Flange_bending_stress(P_x,P_z,h,t,W,Flange_L,y,z):
+def Dual_flange_bending_stress(P_x,P_z,h,t,W,Flange_L,x,z):
     I_xx,I_zz = Flanges_inertia(h,t,W)
-    Sigma_y = (P_x * Flange_L)*(y)/I_zz + (P_z* Flange_L)*(z)/I_xx
+    Sigma_y = (P_x * Flange_L)*(x)/I_zz + (P_z* Flange_L)*(z)/I_xx
 
     return Sigma_y
 
-def Max_sigma_plate(P_x,h,t,W,Flange_L):
-    #All the bending stresses passing at the edge filet of the flange
-    #are assumed to have to squeeze into the plate thickness
-    
+def Single_flange_bending_stress(P_x,P_z,t,W,Flange_L,x,z):
+    I_xx = ((t*W**3)/12)
+    I_zz = ((W*t**3)/12)
+    Sigma_y = (P_x * Flange_L)*(x)/I_zz + (P_z* Flange_L)*(z)/I_xx
 
-    I_xx,I_zz = Flanges_inertia(h,t,W)
-    Max_Sigma_y = (P_x * Flange_L)*(h/2 +t)/I_zz + (P_z* Flange_L)*(W/2)/I_xx
-
-    return Max_Sigma_y
+    return Sigma_y
 
 #------------ Highest loads
 SF_x = 4.5
@@ -75,8 +72,8 @@ D_stepsize = (max_D-min_D)/D_steps
 
 
 min_D_2 = 2 *10**(-3) #[m]; min. hole size to 3D print metals
-max_D_2 = 15 * 10**(-3)
-D_2_steps = 20
+max_D_2 = 150 * 10**(-3)
+D_2_steps = 200
 D_2_stepsize = (max_D-min_D)/D_steps
 
 min_F_num = 3
@@ -147,11 +144,14 @@ for Material in Mat_list_flanges:
                 
                 #---- Calculate bending nominal stresses at flange/plate intersection
                 Flange_L = w + w/2 #Venant Principle to let stresses even out
-                Shoulder_filet = t/2
-                Sigma_y_ben_flange = Flange_bending_stress(P_x,P_z,h,t,w,Flange_L,(h/2 +t),(w/2))
+                Shoulder_fillet = t/2
+                Sigma_y_ben_flange = Single_flange_bending_stress(P_x/2,P_z/2,t,w,Flange_L,t/2,w/2)
+                #Single_flange_bending_stress(P_x,P_z,t,W,Flange_L,x,z)
+                
+                 #Dual_flange_bending_stress(P_x,P_z,h,t,w,Flange_L,(h/2 +t),(w/2))
                 Sigma_y_axial_flange = (P_y/2)/(w*t)
                 Sigma_y_total_flange = Sigma_y_ben_flange + Sigma_y_axial_flange
-                Kt_shoulder_fillet = K_factors.Edge_fillet_factor(3,Shoulder_filet,t)
+                Kt_shoulder_fillet = K_factors.Edge_fillet_factor(3,Shoulder_fillet,t)
 
                 Sigma_shoulder_fillet = Sigma_y_total_flange * Kt_shoulder_fillet
 
@@ -188,11 +188,10 @@ for Material in Mat_list_flanges:
                         print("-----------------------------------------")
                         print("Better configuration for Flange found")
                         print("-----------------------------------------\n")
-
                         print("---- Efficiency and Concentration Factors\n")
 
                         print(f"{' Kbry_Ring Shear Bearing efficiency factor:':<60}{Kbry:<12.3f}")
-                        print(f"{' Kt_Ring Tension efficiency factor at : ':<60}{Kt:<12.3f}")
+                        print(f"{' Kt_Ring Tension efficiency factor : ':<60}{Kt:<12.3f}")
                         print(f"{' Kt Shoulder fillet: ':<60}{Kt_shoulder_fillet:<12.3f}","\n")
 
                         print("---- Ring Allowed Loads\n")
@@ -204,11 +203,10 @@ for Material in Mat_list_flanges:
                         print("---- Flange stresses\n")
                 
                         print(f"{' Nominal root max bending stress: ':<60}{Sigma_y_ben_flange *10**(-6):<12.1f}{'[MPa]':<}")
+                        print(f"{' Nominal root axial stress: ':<60}{Sigma_y_axial_flange *10**(-6):<12.1f}{'[MPa]':<}")
                         print(f"{' Total root nominal stress: ':<60}{Sigma_y_total_flange *10**(-6):<12.1f}{'[MPa]':<}")
                         print(f"{' Stress at shoulder fillet: ':<60}{Sigma_shoulder_fillet*10**(-6):<12.3f}{'[MPa]':<}")
-                        
-                        print(f"{' Ring mass: ':<60}{Flange_mass * 10**3:<12.2f}{'[g]':<}")
-                        print(f"{' Pin stress: ':<60}{tau_pin*10**(-6):<12.1f}{'[GPa]':<}","\n")
+                        print(f"{' Pin stress: ':<60}{tau_pin*10**(-6):<12.1f}{'[MPa]':<}","\n")
 
                         print("---- Flange Properties\n")
                         #print(f"{' Dimension ':<60}{'Value ':<12}{'Unity':<}")
@@ -217,7 +215,8 @@ for Material in Mat_list_flanges:
                         print(f"{' D: ':<60}{D*10**3:<12.3f}{'[mm]':<}")
                         print(f"{' t: ':<60}{t*10**3:<12.3f}{'[mm]':<}")
                         print(f"{' h: ':<60}{h*10**3:<12.3f}{'[mm]':<}")
-                        print(f"{' Shoulder fillet: ':<60}{Shoulder_filet*10**3:<12.3f}{'[mm]':<}")
+                        print(f"{' L: ':<60}{(Flange_L+w/2)*10**3:<12.3f}{'[mm]':<}")
+                        print(f"{' Shoulder fillet: ':<60}{Shoulder_fillet*10**3:<12.3f}{'[mm]':<}")
 
                 t += t_stepsize
             w += w_stepsize
@@ -238,12 +237,12 @@ for Material in Mat_list_fasteners:
         F_num = min_F_num
 
         while F_num <= max_F_num:
-            x_i, z_i, x_cg, z_cg, area, sumx= Fcg.fastener_CG(h,t_1,D_2,Material[0],F_num)
-            print(x_i)
-
-            #t_2 = TI.Min_thickness_finder(h, t_1, D_2, "metal", w, F_num, P_x, P_z, M_y)
+            x_i, z_i, x_cg, z_cg, area, sumx, width = Fcg.fastener_CG(h,t_1,D_2,w, Material[0],F_num)
+            
+            print(sumx,width)
 
             F_num += 1
+
         print("\n")
         print("New D_2", D_2)
         print("\n")
