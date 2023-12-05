@@ -1,9 +1,9 @@
 import math as m
 from Functions import FastenerCG as F
 
-def Fastener_loading(h, t1, d2, mat, fnum,Fcgx,Fcgz,My,w):
+def Fastener_loading(d2, fnum, Fcgx, Fcgz, My , x_i, z_i, x_cg, z_cg):
 
-    x_i, z_i, x_cg, z_cg, area, sumx, sumy = F.fastener_CG(h, t1, d2, mat, fnum, w) 
+    area = m.pi()*(d2/2)**2
 
     F_inx = Fcgx / fnum 
     F_inz = Fcgz / fnum 
@@ -26,7 +26,7 @@ def Fastener_loading(h, t1, d2, mat, fnum,Fcgx,Fcgz,My,w):
 
     F_inMy_total = round(sum(F_inMy), 4) 
 
-    return F_inx, F_inz, F_inMy, fnum, d2
+    return F_inx, F_inz, F_inMy
 
 
 

@@ -99,9 +99,9 @@ def sigma_thermal(t2, d2):
 
     thermal_stresswall = max(thermal_wall) 
     thermal_stresslug = max(thermal_lug) 
-    print(thermal_stresswall*10**-6) 
-    print(thermal_stresslug*10**-6) 
-    print(thermal_wall) 
+    # print(thermal_stresswall*10**-6) 
+    # print(thermal_stresslug*10**-6) 
+    # print(thermal_wall) 
     return thermal_stresslug #, thermal_stresswall 
         
                             
