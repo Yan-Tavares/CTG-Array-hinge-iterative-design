@@ -17,10 +17,10 @@ def sigma_thermal(t2, d2):
     hole = hole()
 
     class temp:
-        min_lug = -48 + 273.15 
-        max_lug = 626 + 273.15 
-        min_wall= -273 + 273.15 
-        max_wall = 130 + 273.15 
+        min_lug = -139.5 
+        max_lug = 158.8
+        min_wall= -139.5 
+        max_wall = 158.8 
         tref = 288.15
 
     temp = temp()
@@ -39,8 +39,6 @@ def sigma_thermal(t2, d2):
 
     diff_lug_vec = [diff_lug.maxlug, diff_lug.minlug]
     diff_wall_vec = [diff_wall.maxwall, diff_wall.maxwall]
-
-
 
     
     D_fi = hole.D2 #ad D2 here
@@ -101,9 +99,9 @@ def sigma_thermal(t2, d2):
 
     thermal_stresswall = max(thermal_wall) 
     thermal_stresslug = max(thermal_lug) 
-    # print(thermal_stresswall*10**-6) 
-    # print(thermal_stresslug*10**-6) 
-    #print(thermal_wall) 
+    print(thermal_stresswall*10**-6) 
+    print(thermal_stresslug*10**-6) 
+    print(thermal_wall) 
     return thermal_stresslug #, thermal_stresswall 
         
                             
