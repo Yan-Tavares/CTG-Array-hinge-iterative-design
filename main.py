@@ -229,7 +229,6 @@ for Material in Mat_list_flanges:
                         print(f"{' h: ':<60}{h*10**3:<12.3f}{'[mm]':<}")
                         print(f"{' L: ':<60}{(Flange_L+w/2)*10**3:<12.3f}{'[mm]':<}")
                         print(f"{' Shoulder fillet: ':<60}{Shoulder_fillet*10**3:<12.3f}{'[mm]':<}")
-                        print(Single_flange_bending_stress(P_x/2,P_z/2,0.00628,0.0113,Flange_L,0.00628/2,0.0113/2))
 
                 t += t_stepsize
             w += w_stepsize
@@ -272,7 +271,7 @@ for Material in Mat_list_fasteners:
 
                 F_xi, F_zi, F_Myi, F_iMz  = Fd.In_plane_loading(D_2,P_x,P_z,M_y, M_z, x_i,z_i,x_cg,z_cg,F_num)
 
-                t_2 = TI.Min_thickness_finder(D_2, F_num, F_xi, F_zi,F_iMz, w)
+                t_2, Bearing_stress_list = TI.Min_thickness_finder(D_2, F_num, F_xi, F_zi,F_iMz, w)
 
                 Fy_i = Fd.calculate_out_of_plane_load(F_iMz, P_y, F_num)
 
@@ -286,6 +285,7 @@ for Material in Mat_list_fasteners:
 
                 if sigma_BP < Sigma_yiel_BP : #and sigma_SC < Sigma_yield_SC
                     if BP_mass < Min_BP_mass:
+                        Min_BP_mass = BP_mass
 
                         print("-----------------------------------------")
                         print("Better Fastener/Backplate Design found")
@@ -295,51 +295,17 @@ for Material in Mat_list_fasteners:
                         #print(f"{' Dimension ':<60}{'Value ':<12}{'Unity':<}")
 
                         print(f"{' Backplate mass: ':<60}{BP_mass* 10**3:<12.3f}{'[g]':<}")
-                        print(f"{' W: ':<60}{width*10**3:<12.3f}{'[mm]':<}")
-                        print(f"{' h: ':<60}{sumx*10**3:<12.3f}{'[mm]':<}")
-                        print(f"{' D2: ':<60}{D_2*10**3:<12.3f}{'[mm]':<}")
-                        print(f"{' Df0: ':<60}{Df0*10**3:<12.3f}{'[mm]':<}")
+                        print(f"{' W_2: ':<60}{width*10**3:<12.3f}{'[mm]':<}")
+                        print(f"{' h_2: ':<60}{sumx*10**3:<12.3f}{'[mm]':<}")
+                        print(f"{' t_2: ':<60}{t_2*10**3:<12.3f}{'[mm]':<}")
+                        print(f"{' D_f0: ':<60}{Df0*10**3:<12.3f}{'[mm]':<}")
                         print(f"{' D_2: ':<60}{D_2*10**3:<12.3f}{'[mm]':<}")
 
-                        print(x_i)
-                        print(z_i)
-                        print(width,"and",sumx)
-                        print(t_2)
-                        print(D_2)
-                        print(Df0)
-                        print(BP_mass)
-
-                        Min_BP_mass = BP_mass
+                        print("---- Fastener/Backplate stresses\n")
+                        print(f"{' Max bearing stress: ':<60}{max(Bearing_stress_list)*10**(-6):<12.3f}{'[MPa]':<}")
+                        
 
                 Df0_offset += Df0_offset_stepsize
                 
             F_num += 1
         D_2 += D_2_stepsize
-
-
-
-
-
-
-
-
-#-----------------------SET STEPSIZE -------------------
-
-# for Material in Mat_list_flanges:
-#     Sigma_y = Material[2]
-#     rho = Material[3]
-    
-#     D_2 = min_D_2
-
-#     while D_2 <= max_D_2:
-#         F_num = min_F_num
-
-#         while F_num <= max_F_num:
-#             t_2 = TI.Min_thickness_finder(h, t_1, D_2, "metal", w, F_num, P_x, P_z, M_y)
-
-#             Fas_and_plate_mass = 
-
-#             if 
-#             F_num +=1
-
-#         D_2 += D_2_stepsize

@@ -23,7 +23,7 @@ def Min_thickness_finder(d2, fnum, F_inxp, F_inzp,F_inMyp, W):
         pi_list.append(m.sqrt((F_inxp[i])**2+ (F_inzp[i])**2 + (F_inMyp[i])**2)) 
 
     t2 = 0.001
-    biggest_t2 = t2
+    
 
     for i in range(fnum):
         result = round(pi_list[i]/(d2*t2), 4) 
@@ -31,34 +31,8 @@ def Min_thickness_finder(d2, fnum, F_inxp, F_inzp,F_inMyp, W):
 
     sstrength = (240*10**6) ### Material Shear Strength for aluminum 
 
-    for i in range(fnum):
-        t2 = 0.001 
-
-        if sigma_list[i] >= sstrength:
-            while sigma_list[i] >= sstrength:
-                t2 = t2 + stepsize # stepsize
-                sigma_list[i] = pi_list[i] / (d2*t2) 
-
-        else:
-            while sigma_list[i] < sstrength and t2 >= 0: 
-                if t2 < 0.001 + stepsize: 
-                    break
-
-                if t2 - stepsize > 0:
-                    t2 = t2 - stepsize # stepsize 
-                
-                sigma_list[i] = pi_list[i] / (d2*t2)
-
-        if t2 > biggest_t2:
-            biggest_t2 = t2
-
-    # print(biggest_t2)
-    # print(sigma_list)
-    sigma_list2 = sigma_list
-    a = sigma_list2[0]
-
-    for i in range(len(sigma_list)):
-        sigma_list[i] += TS.sigma_thermal(biggest_t2, d2) ### NEW STRESS LIST OBTAINED. 
+    Bearing_stress_list = sigma_list
+    biggest_t2 = t2
 
     for i in range(fnum):
         t2 = 0.001 
@@ -80,6 +54,37 @@ def Min_thickness_finder(d2, fnum, F_inxp, F_inzp,F_inMyp, W):
 
         if t2 > biggest_t2:
             biggest_t2 = t2
+            Bearing_stress_list = sigma_list
+
+    # # print(biggest_t2)
+    # # print(sigma_list)
+    # sigma_list2 = sigma_list
+    # a = sigma_list2[0]
+
+    # for i in range(len(sigma_list)):
+    #     sigma_list[i] += TS.sigma_thermal(biggest_t2, d2) ### NEW STRESS LIST OBTAINED. 
+
+    # for i in range(fnum):
+    #     t2 = 0.001 
+
+    #     if sigma_list[i] >= sstrength:
+    #         while sigma_list[i] >= sstrength:
+    #             t2 = t2 + stepsize # stepsize
+    #             sigma_list[i] = pi_list[i] / (d2*t2) 
+
+    #     else:
+    #         while sigma_list[i] < sstrength and t2 >= 0: 
+    #             if t2 < 0.001 + stepsize: 
+    #                 break
+
+    #             if t2 - stepsize > 0:
+    #                 t2 = t2 - stepsize # stepsize 
+                
+    #             sigma_list[i] = pi_list[i] / (d2*t2)
+
+    #     if t2 > biggest_t2:
+    #         biggest_t2 = t2
+    #         Bearing_stress = max(sigma_list)
     
 
     # print(biggest_t2)
@@ -87,7 +92,7 @@ def Min_thickness_finder(d2, fnum, F_inxp, F_inzp,F_inMyp, W):
     b = sigma_list[0]
     # print(b-a)
     
-    return biggest_t2
+    return biggest_t2 , Bearing_stress_list
     
 
 # (Min_thickness_finder(h, t1, d2, material, fnum, Fcgx, Fcgz, My,W))
